@@ -1,3 +1,6 @@
+"""
+https://stackoverflow.com/questions/74743249/cant-access-site-programmatically
+"""
 import requests
 import urllib.parse
 from bs4 import BeautifulSoup as bs

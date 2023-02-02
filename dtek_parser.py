@@ -11,9 +11,11 @@ dtek_url = r'https://www.dtek-kem.com.ua'
 outfile = open('test.txt', 'w')
 s = requests.Session()
 
-s.cookies['incap_ses_689_2224657'] = '9y9nNtrZ8BCKJ9KqttKPCbqx2mMAAAAAhYD2jb7rgG8QGHcOUD9Apw==' #  Из брэйва
+jar = requests.cookies.RequestsCookieJar()
+# s.cookies['incap_ses_689_2224657'] = '9y9nNtrZ8BCKJ9KqttKPCbqx2mMAAAAAhYD2jb7rgG8QGHcOUD9Apw==' #  Из брэйва
 # s.cookies['incap_ses_689_2224657'] = 'hNErZjEedSu+SdaqttKPCfLE2mMAAAAACfxY5JE3nLKw5o28+sFzuQ=='  # Из пайчарма инвалид
-# s.cookies['incap_ses_689_2224657'] = 'k42CXYdZzAOPcNaqttKPCbPF2mMAAAAAAtRFs2nAp1M8wLzEOOhAaA==' # Из эджа норм
+s.cookies['incap_ses_247_2224657'] = '48B7RW0Kghlj3Yt2M4ZtA5Z/22MAAAAAQ0VlMFGbKLgiGZ9+HF52aA==' # Из эджа норм
+
 # 9kMnXYv85A9Nn9aqttKPCbTG2mMAAAAA59qnu11/f01mKuYnr9oeOw==  # Из брейва, тоже скорей всего норм
 resp = s.get(urllib.parse.urljoin(dtek_url, '/ua/shutdowns'))
 print(resp)

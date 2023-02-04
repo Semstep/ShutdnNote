@@ -10,7 +10,7 @@ import serve
 # COOCKA = r'incap_ses_689_2224657=vfTqI6LKnEjARQirttKPCS0W3GMAAAAA6C83W9Ll4txHMj4dBJ61fA=='
 # COOCKA = r'incap_ses_763_2224657=LN4QCM9/sGWur1RZPbmWCtfG02MAAAAAY7Zf0vCukCz3wzNrFNDvAA=='
 # COOCKA = r'incap_ses_689_2224657=LTT/A0nvXC0ZxSSrttKPCa/23GMAAAAAQIECCT/9OmufISMUssKZtA=='
-COOCKA = r'incap_ses_689_2224657=fgzfFG/Y61QPYDGrttKPCWQv3WMAAAAAg7QQZMouwd7Xf2hdP0uBFA=='
+COOCKA = r'incap_ses_689_2224657=JiduBAH16UKM1WSrttKPCd6c3mMAAAAAnjxXH1x1oTHJNlI/Klrwag=='
 LOGDIR = 'logs\\'
 OUTFILE = 'test3.txt'
 DTEK_URL = r'https://www.dtek-kem.com.ua'

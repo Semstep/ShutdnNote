@@ -2,6 +2,7 @@
 import requests
 import urllib.parse
 from bs4 import BeautifulSoup as bs
+import pickle
 from get_dtek_cookie import showdic
 from pprint import pprint
 import serve
@@ -51,22 +52,24 @@ def set_cookie(sess: requests.Session(), name: str='', val: str='',*, rawstr: st
 
 NEED_DTEK_CONN = True
 
-if __name__ == '__main__':
-    if NEED_DTEK_CONN:
-        sess = requests.Session()
-        sess = set_cookie(sess, rawstr=COOCKA)  # иногда можно и без этого, хз когда
-        resp = sess.get(urllib.parse.urljoin(DTEK_URL, PAGE_ADDR))  # , headers=make_headers('headers.txt'))
-        print(resp.status_code)
-        print(SOUP_DIR + SOUP_FILE)
-        # print(resp.content)
-        soup = bs(resp.content, 'lxml')
-        if resp_ok_text not in soup.text:
-            print('Cookie is invalid')
-        else:
-            print(soup.title)
-            serve.pickle_put(soup, SOUP_DIR + SOUP_FILE)
-            print(f'soup was pickled into {SOUP_DIR + SOUP_FILE}')
-    else:
-        soup = serve.unpicle(SOUP_DIR + SOUP_FILE)
+# if __name__ == '__main__':
+sess = requests.Session()
+sess = set_cookie(sess, rawstr=COOCKA)  # иногда можно и без этого, хз когда
+resp = sess.get(urllib.parse.urljoin(DTEK_URL, PAGE_ADDR))  # , headers=make_headers('headers.txt'))
+print(resp.status_code)
+soup = bs(resp.content, 'lxml')
+if resp_ok_text not in soup.text:
+    print('Cookie is invalid')
+    print(soup.get_text())
+else:
+    print(soup.title)
 
-print(soup.get_text())
+f = lambda tag: tag.name == 'script' and not tag.attrs
+
+# d = soup.find_all(lambda tag: tag.name == 'script' and not tag.attrs)[-1].decode_contents()
+d = soup.find_all(f)[-1].decode_contents()
+serve.pickle_put(d, 'pickle\soupfind.bin')
+print('pickled')
+wrtlog(d)
+
+

@@ -12,7 +12,7 @@ def to_set(inp: list) -> set:
 
 def compare_street_tables(tbl_a_file, tbl_b_file) -> set:
     """
-    принимает 2 файла с названием улицы в каждой строке
+    Принимает 2 файла с названием улицы в каждой строке
     """
     with open(tbl_a_file, 'r') as f1:
         lst_a = [l.strip('\n').strip(" '").strip("',").strip() for l in f1.readlines()]

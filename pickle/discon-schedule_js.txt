@@ -1,0 +1,479 @@
+let DisconSchedule = {
+    streets: undefined,
+    selectelem: false,
+    finded_count: undefined,
+    preset: undefined,
+    showCurOutage: undefined,
+    showCurSchedule: undefined,
+    currentWeekDayIndex: undefined,
+    messages: new Map([
+        ['no-blackout', "Відключення електроенергії відбуваються згідно графіків стабілізаційних відключень (ГПВ)."],
+        ['under-discon', 'Для отримання інформації про графік відключень за Вашою адресою звертайтеся до ОСББ/ЖЕК/Керуючої компанії.'],
+        ['extra-message', 'Якщо електроенергії немає в гарантовані проміжки часу (відмічені білим кольором на графіку) – можливо, у вас виникла аварія. Прохання оформити заявку у формі нижче.<br>У разі застосування екстрених відключень (ГАВ), стабілізаційні графіки не діють.'],
+        ['extra-message-vol', 'Якщо електроенергії немає в гарантовані проміжки часу згідно Вашого графіку – можливо, у вас виникла аварія. Прохання оформити заявку у формі нижче.<br>У разі застосування екстрених відключень (ГАВ), стабілізаційні графіки не діють.'],
+        ['discon-not-actual', ''], //Наразі графік стабілізаційних відключень не застосовується.
+        ['planned-discon', ''],//Нижче можна ознайомитись з графіком стабілізаційних відключень для Вашого будинку
+        ['leave-message', '']//Графік стабілізаційних відключень не застосовується для Вас.</br>Якщо ж відключення відбуваються за відсутністю будинку у графіку - просимо повідомити нас про це натиснувши кнопку нижче. Ми додатково перевіримо інформацію та додамо адресу у разі потреби.
+    ]),
+    form: $('#discon_form'),
+    group: undefined,
+    onload: document.addEventListener('DOMContentLoaded', function () {
+        DisconSchedule.init();
+    }),
+    init: function () {
+        this.ajax.url = document.querySelector('meta[name="ajaxUrl"]').content;
+        $('#house_num').prop('disabled', true);
+        DisconSchedule.tableRender(0);
+        $('#showCurOutage').removeClass('active');
+        this.bind();
+    },
+    bind: function () {
+        DisconSchedule.autocomplete($('#street')[0], DisconSchedule.streets, false);
+        $('.autocomplete img').on('click', DisconSchedule.listopen);
+        $('.form__input').on('click', DisconSchedule.listopen_input);
+
+        $('.legend-item>#schedulled-text')[0].innerHTML = DisconSchedule.preset['time_type']['no'];
+        $('.legend-item>#non-schedulled-text')[0].innerHTML = DisconSchedule.preset['time_type']['yes'];
+        $('.legend-item>#maybe-schedulled-text')[0].innerHTML = DisconSchedule.preset['time_type']['maybe'];
+
+        $('.discon-schedule-table')[0].onfocus = function(event){
+            $('.discon-schedule-table')[0].blur();
+            event.stopPropagation();
+        }
+        window.onresize = function(event) {
+            if ($(".discon-schedule-table").hasClass('active')) DisconSchedule.tableRender(DisconSchedule.group);
+        };
+    },
+    autocomplete: function (inp, data, key_preset) {
+        /*the autocomplete function takes two arguments,
+        the text field element and an array of possible autocompleted values:*/
+        var currentFocus;
+        let noBlackoutMessage;
+        if (inp.id == 'house_num' && key_preset[0]["sub_type_reason"].length > 1 && data.length == 1 && data[0] == '-') {
+            $('.discon-schedule-alert').addClass('active');
+        }
+        else {
+            $('.discon-schedule-alert').removeClass('active');
+        }
+
+        if (data[0] == '-') {
+            closeAllLists();
+            $('#house_num')[0].value = " ";
+            $('#house_num').prop('disabled', true);
+            $('#house_num').removeClass('active');
+            $('.error-active').removeClass('error-active');
+            $('#showCurOutage').removeClass('active');
+            $('.discon-schedule-table').addClass('active');
+            if (DisconSchedule.showCurSchedule) $('#legendarium-table').addClass('active');
+
+            DisconSchedule.alertMessageBlock(key_preset,0);
+
+            return;
+        }
+        inp.addEventListener("input", function (e) {
+            DisconSchedule.selectelem = false;
+            var a, b, val = this.value; //Видалили i магію
+            closeAllLists();
+            if (!val) return false;
+            if (key_preset === false && val.length < 3) return false;
+            currentFocus = -1;
+            a = document.createElement("DIV");
+            a.setAttribute("id", this.id + "autocomplete-list");
+            a.setAttribute("class", "autocomplete-items");
+            this.parentNode.appendChild(a);
+            DisconSchedule.finded_count = 0;
+            for (let i_index = 0; i_index < data.length; i_index++) {
+                data_val = data[i_index].toLowerCase();
+                val_val = val.toLowerCase();
+                if (data_val.includes(val_val)) { //We can replace 'include' to 'replace' from function down here and it will be more quickly
+                    b = document.createElement("DIV");
+                    let new_value_elem = data_val.replace(val_val, "<strong>" + val_val + "</strong>"); //HARD Time Code
+                    b.innerHTML = new_value_elem;
+                    if (key_preset !== false && key_preset[i_index]["sub_type_reason"].length != 0) {
+                        b.innerHTML += '<input type="hidden" value="' + data[i_index] + '" data-key-group="' + key_preset[i_index]["sub_type_reason"] + '">';
+                    }
+                    else {
+                        b.innerHTML += '<input type="hidden" value="' + data[i_index] + '">';
+                    }
+                    b.onclick = function (e) {
+                        DisconSchedule.selectelem = true;
+                        inp.value = this.getElementsByTagName("input")[0].value;
+                        if (key_preset !== false) {
+                            if(key_preset[i_index]["sub_type_reason"].length != 0){
+                                inp.setAttribute("data-key-group", this.getElementsByTagName("input")[0].getAttribute("data-key-group"));
+                                $('#showCurOutage').removeClass('active');
+                                $('.discon-schedule-table').addClass('active');
+                                if (DisconSchedule.showCurSchedule) $('#legendarium-table').addClass('active');
+                            }
+                            DisconSchedule.alertMessageBlock(key_preset,i_index,this);
+                        }
+                        else {
+                            DisconSchedule.ajax.formSubmit('getHomeNum');
+                        }
+                        closeAllLists();
+                    };
+
+                    a.appendChild(b);
+                    $(this)[0].closest('.discon-input-wrapper').classList.add('open');
+                    DisconSchedule.finded_count++;
+                }
+            }
+        });
+        inp.onblur = (event) => {
+            if (event.relatedTarget == $('.discon-schedule-table')[0]) {
+                closeAllLists();
+                $('.discon-schedule-table')[0].blur();
+                event.stopPropagation();
+            }
+            if (!DisconSchedule.selectelem) {
+                inp.value = '';
+                $('.discon-schedule-alert').removeClass('active');
+                DisconSchedule.tableRender(0);
+                $('#group-name').css("display", "none");
+                if (inp.name == "street") {
+                    DisconSchedule.disableWrapper('house_num');
+                }
+                $('#showCurOutage').removeClass('active');
+            }
+        }
+        inp.onkeyup = function (e) {
+            if ($('#house_num')[0].value == "" || $('#house_num')[0].value.trim() == "" || DisconSchedule.finded_count == 0) {
+                $('#house_num')[0].closest(".discon-input-wrapper").classList.add('error-active');
+            }
+            else {
+                $('#house_num')[0].closest(".discon-input-wrapper").classList.remove('error-active');
+            }
+            if (inp.name == "street") {
+                DisconSchedule.disableWrapper('house_num');
+
+                if ($('#street')[0].value == "" || $('#street')[0].value.trim() == "" || DisconSchedule.finded_count == 0) {
+                    $('#street')[0].closest(".discon-input-wrapper").classList.add('error-active');
+                }
+                else {
+                    $('#street')[0].closest(".discon-input-wrapper").classList.remove('error-active');
+                }
+            }
+            $('.discon-schedule-alert').removeClass('active');
+        };
+        inp.onkeydown = function (e) {
+            var x = document.getElementById(this.id + "autocomplete-list");
+            DisconSchedule.tableRender(0);
+            $('#showCurOutage').removeClass('active');
+            $('#group-name').css("display", "none");
+            if (x) x = x.getElementsByTagName("div");
+            if (e.keyCode == 40) {
+                /*If the arrow DOWN key is pressed,
+                increase the currentFocus variable:*/
+                currentFocus++;
+                /*and and make the current item more visible:*/
+                addActive(x);
+            } else if (e.keyCode == 38) { //up
+                /*If the arrow UP key is pressed,
+                decrease the currentFocus variable:*/
+                currentFocus--;
+                /*and and make the current item more visible:*/
+                addActive(x);
+            } else if (e.keyCode == 13) {
+                /*If the ENTER key is pressed, prevent the form from being submitted,*/
+                e.preventDefault();
+                if (currentFocus > -1) {
+                    /*and simulate a click on the "active" item:*/
+                    if (x) {
+                        x[currentFocus].click();
+                        e.target.blur();
+                        e.stopPropagation();
+                    }
+                }
+                else {
+                    if ($('.discon-input-wrapper.open')[0]) {
+                        if ($('.discon-input-wrapper.open')[0]) $('.discon-input-wrapper.open').find('.autocomplete-items').find('div:first-child')[0].click();
+                        e.target.blur();
+                        e.stopPropagation();
+                    }
+                }
+            }
+        };
+        function addActive(x) {
+            if (!x) return false;
+            removeActive(x);
+            if (currentFocus >= x.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = (x.length - 1);
+            x[currentFocus].classList.add("autocomplete-active");
+        }
+        function removeActive(x) {
+            for (var i = 0; i < x.length; i++) {
+                x[i].classList.remove("autocomplete-active");
+            }
+        }
+        function closeAllLists(elmnt) {
+            inp.closest('.discon-input-wrapper').classList.remove('open');
+            var x = document.getElementsByClassName("autocomplete-items");
+            for (var i = 0; i < x.length; i++) {
+                if (elmnt != x[i] && elmnt != inp) {
+                    x[i].parentNode.removeChild(x[i]);
+                }
+            }
+        }
+        document.onclick = function (e) {
+            closeAllLists(e.target);
+        };
+    },
+    listopen_input: function (e) {
+        var x = document.getElementsByClassName("autocomplete-items");
+        for (var i = 0; i < x.length; i++) {
+            x[i].parentNode.removeChild(x[i]);
+        }
+        DisconSchedule.selectelem = false;
+        e.bubbles = false;
+        if (e.target.value != '') {
+            e.target.dispatchEvent(new Event('input', { bubbles: false }));
+            e.stopPropagation();
+        }
+    },
+    listopen: function (e) {
+        var x = document.getElementsByClassName("autocomplete-items");
+        for (var i = 0; i < x.length; i++) {
+            x[i].parentNode.removeChild(x[i]);
+        }
+        e.bubbles = false;
+        DisconSchedule.selectelem = false;
+        e.target.parentNode.getElementsByTagName("input")[0].dispatchEvent(new Event('input', { bubbles: false }));
+        e.target.parentNode.getElementsByTagName("input")[0].focus();
+        e.stopPropagation();
+    },
+    tableHidden: function(e){
+        $('.discon-schedule-table').removeClass('active');
+        $('#legendarium-table').removeClass('active');
+        $('#group-name').css("display", "none");
+    },
+    disableWrapper: function (element_id) {
+        $(`#${element_id}`)[0].classList.remove('active');
+        $(`#${element_id}`)[0].closest(".discon-input-wrapper").classList.remove('error-active');
+        $(`#${element_id}`).prop('disabled', true);
+        $(`#${element_id}`).val('');
+    },
+    enableWrapper: function (element_id) {
+        $(`#${element_id}`)[0].classList.add('active');
+        $(`#${element_id}`)[0].closest(".discon-input-wrapper").classList.add('error-active');
+        $(`#${element_id}`).prop('disabled', false);
+    },
+    alertMessageBlock: function(key_preset, index, in_list = false){
+        if (DisconSchedule.showCurOutage) {
+            if (key_preset[index]["sub_type"] == '' && key_preset[index]["start_date"] == '' && key_preset[index]["end_date"] == '') {
+                noBlackoutMessage = DisconSchedule.messages.get('no-blackout');
+                if (key_preset[index]["voluntarily"]) {
+                    noBlackoutMessage += `<br>${DisconSchedule.messages.get('under-discon')}`;
+                    noBlackoutMessage += `<br>${DisconSchedule.messages.get('extra-message-vol')}`;
+                    DisconSchedule.tableHidden();
+                }else{
+                    noBlackoutMessage += `<br>${DisconSchedule.messages.get('extra-message')}`;
+                }               
+                $('#showCurOutage>p')[0].innerHTML = noBlackoutMessage;
+            }
+            else {
+                let dateStartFormat = key_preset[index]["start_date"];
+                let dateEndFormat = key_preset[index]["end_date"];
+                switch (key_preset[index]["type"]) {
+                    case "1":
+                        $('#showCurOutage>p')[0].innerHTML = "За вашою адресою в даний момент відсутня електроенергія</br>Причина відключення: <strong>планові ремонтні роботи</strong></br>Час початку – <strong>" + dateStartFormat + "</strong></br>Орієнтовний час відновлення електроенергії – <strong>до " + dateEndFormat + "</strong>";
+                        break;
+                    case "2":
+                        $('#showCurOutage>p')[0].innerHTML = "За вашою адресою в даний момент відсутня електроенергія</br>Причина відключення: <strong>" + key_preset[index]["sub_type"] + "</strong></br>Час початку – <strong>" + dateStartFormat + "</strong></br>Орієнтовний час відновлення електроенергії – <strong>до " + dateEndFormat + "</strong>";
+                        break;
+                    default:
+                        break;
+                }
+            }
+            if (key_preset[index]["sub_type_reason"] != '' && key_preset[index]["sub_type_reason"].length != 0 && key_preset[index]["sub_type"] != '' && key_preset[index]["voluntarily"]) {
+                $('#showCurOutage>p')[0].innerHTML = $('#showCurOutage>p')[0].innerHTML + "<br><br>" + DisconSchedule.messages.get('under-discon');
+                DisconSchedule.tableHidden();
+            }
+            else if (key_preset[index]["sub_type_reason"] == '' || key_preset[index]["sub_type_reason"].length == 0) {
+                DisconSchedule.tableHidden();
+            }
+            $('#showCurOutage').addClass('active');
+        }
+        if (key_preset[index]["sub_type_reason"].length > 1 && $('.discon-schedule-table').hasClass('active')) {
+            DisconSchedule.tableRender(0);
+            $('.discon-schedule-alert').addClass('active');
+        }
+        else if(key_preset[index]["sub_type_reason"].length == 0){
+            DisconSchedule.tableHidden();
+        }
+        else {
+            $('.discon-schedule-alert').removeClass('active');
+            if ($('.discon-schedule-table').hasClass('active')){
+                if(in_list) DisconSchedule.tableRender(parseInt(in_list.getElementsByTagName("input")[0].getAttribute("data-key-group")));
+                else DisconSchedule.tableRender(key_preset[0]["sub_type_reason"][0]);
+            }
+        }
+    },
+    tableRender: function (key_preset) {
+        if (!DisconSchedule.showCurSchedule) return;
+        if (key_preset != 0 && key_preset !== false && $('#house_num').val() != " ") $('#house_num')[0].closest('div.discon-input-wrapper').classList.add('preloader-spinner');
+        if (key_preset != 0 && key_preset !== false) $('#group-name').css("display", "block");
+        DisconSchedule.group = key_preset;
+        $('#group-name>span')[0].innerHTML =  DisconSchedule.preset['sch_names'][key_preset];  
+        const parent_table = document.getElementById('tableRenderElem'),
+            table = document.createElement('table'),
+            thead = document.createElement('thead'),
+            tbody = document.createElement('tbody');
+        parent_table.innerHTML = '';
+        const tr_thead = thead.insertRow();
+        tr_thead.insertCell().outerHTML = "<th colspan='2'><div class='head-time'>Часові<br>проміжки</div></th>";
+        if(window.innerWidth <= 845){
+            for (var i = 1; i <= Object.keys(DisconSchedule.preset['days']).length; i++) {
+                if (parseInt(i) == DisconSchedule.currentWeekDayIndex) {
+                    tr_thead.insertCell().outerHTML = "<th scope='col' class='current-day'><div>" + DisconSchedule.preset['days'][i] + "</div></th>";
+                }
+                else {
+                    tr_thead.insertCell().outerHTML = "<th scope='col'><div>" + DisconSchedule.preset['days'][i] + "</div></th>";
+                }
+            }
+            table.appendChild(thead);
+
+            for (var i = 1; i <= Object.keys(DisconSchedule.preset['time_zone']).length; i++) {
+                const tr_tbody = tbody.insertRow();
+                let tbody_content_html = "<td colspan='2'";
+                if (DisconSchedule.currentWeekDayIndex == 1){
+                    tbody_content_html += " class='monday-td-day'";
+                }
+                tbody_content_html += "><div>" + DisconSchedule.preset['time_zone'][i] + "</div></td>";
+                tr_tbody.insertCell().outerHTML = tbody_content_html;
+                for (var j = 1; j <= Object.keys(DisconSchedule.preset['days']).length; j++) {
+                    let yesterday_class = '';
+                    if ((parseInt(j) + 1) == DisconSchedule.currentWeekDayIndex) { yesterday_class = "yesterday-cell"; }
+                    else if (parseInt(j) == 1 && DisconSchedule.currentWeekDayIndex == 1) { yesterday_class = "monday-cell"; }
+                    if (key_preset != 0) {
+                        if (DisconSchedule.preset['data'][parseInt(key_preset)][j]) {
+                            if (DisconSchedule.preset['data'][parseInt(key_preset)][j][i]){
+                                switch (DisconSchedule.preset['data'][parseInt(key_preset)][j][i]) {
+                                    case "yes":
+                                        tr_tbody.insertCell().outerHTML = "<td class='cell-non-scheduled "+ yesterday_class +"'></td>";
+                                        break;
+                                    case "maybe":
+                                        tr_tbody.insertCell().outerHTML = "<td class='cell-scheduled-maybe "+ yesterday_class +"'></td>";
+                                        break;
+                                    case "no":
+                                        tr_tbody.insertCell().outerHTML = "<td class='cell-scheduled "+ yesterday_class +"'></td>";
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                            else {
+                                tr_tbody.insertCell().outerHTML = "<td class='cell-non-scheduled "+ yesterday_class +"'></td>";
+                            }
+                        }
+                        else {
+                            tr_tbody.insertCell().outerHTML = "<td class='cell-non-scheduled "+ yesterday_class +"'></td>";
+                        }
+                    }
+                    else {
+                        tr_tbody.insertCell().outerHTML = "<td class='cell-non-scheduled "+ yesterday_class +"'></td>";
+                    }
+                }
+            }
+        }
+        else{
+            for (var i = 1; i <= Object.keys(DisconSchedule.preset['time_zone']).length; i++) {
+                let thead_content_html = "<th scope='col'";
+                if (DisconSchedule.currentWeekDayIndex == 1){
+                    thead_content_html += " class='monday-th-day'";
+                }
+                thead_content_html += "><div>" + DisconSchedule.preset['time_zone'][i] + "</div></th>";
+                tr_thead.insertCell().outerHTML = thead_content_html;
+            }
+            table.appendChild(thead);
+
+            for (var i = 1; i <= Object.keys(DisconSchedule.preset['days']).length; i++) {
+                const tr_tbody = tbody.insertRow();
+                if (parseInt(i) == DisconSchedule.currentWeekDayIndex) {
+                    tr_tbody.insertCell().outerHTML = "<td colspan='2' class='current-day'><div>" + DisconSchedule.preset['days'][i] + "</div></td>";
+                }
+                else{
+                    if ((parseInt(i) + 1) == DisconSchedule.currentWeekDayIndex) tr_tbody.className = "yesterday-row";
+                    tr_tbody.insertCell().outerHTML = "<td colspan='2'><div>" + DisconSchedule.preset['days'][i] + "</div></td>";
+                }
+                if (parseInt(i) == 1 && DisconSchedule.currentWeekDayIndex == 1) tr_tbody.className = "monday-row";
+                for (var j = 1; j <= Object.keys(DisconSchedule.preset['time_zone']).length; j++) {
+                    if (key_preset != 0) {
+                        if (DisconSchedule.preset['data'][parseInt(key_preset)][i]) {
+                            if (DisconSchedule.preset['data'][parseInt(key_preset)][i][j]){
+                                switch (DisconSchedule.preset['data'][parseInt(key_preset)][i][j]) {
+                                    case "yes":
+                                        tr_tbody.insertCell().outerHTML = "<td class='cell-non-scheduled'></td>";
+                                        break;
+                                    case "maybe":
+                                        tr_tbody.insertCell().outerHTML = "<td class='cell-scheduled-maybe'></td>";
+                                        break;
+                                    case "no":
+                                        tr_tbody.insertCell().outerHTML = "<td class='cell-scheduled'></td>";
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                            else {
+                                tr_tbody.insertCell().outerHTML = "<td class='cell-non-scheduled'></td>";
+                            }
+                        }
+                        else {
+                            tr_tbody.insertCell().outerHTML = "<td class='cell-non-scheduled'></td>";
+                        }
+                    }
+                    else {
+                        tr_tbody.insertCell().outerHTML = "<td class='cell-non-scheduled'></td>";
+                    }
+                }
+            }
+        }
+        table.appendChild(tbody);
+        parent_table.appendChild(table);
+
+        $('.discon-schedule-table').addClass('active');
+        $('#legendarium-table').addClass('active');
+
+        if (key_preset != 0 && key_preset !== false) $('#house_num')[0].closest('div.discon-input-wrapper').classList.remove('preloader-spinner');
+    },
+    ajax: {
+        url: undefined, obj: {}, send: function (success, failure) {
+            $.post(this.url, this.obj, (answer) => {
+                this.obj = {};
+                answer.result && typeof success === 'function' ? success(answer) :
+                    !answer.result && typeof failure === 'function' ? failure(answer) : null;
+                DisconSchedule.ajax.obj = {};
+            }, 'JSON');
+        },
+        formSubmit: function (method) {
+            $('#street')[0].closest('div.discon-input-wrapper').classList.add('preloader-spinner');
+            this.obj.method = method;
+            this.obj.data = DisconSchedule.form.serializeArray();
+            this.send(function (answer) {
+                    DisconSchedule.showCurOutage = answer.showCurOutageParam;
+                    DisconSchedule.showCurSchedule = answer.showCurSchedule;
+                    let data_home_num = [];
+                    let data_home_group = [];
+                    $.each(answer.data, (k, v) => {
+                        data_home_num.push(k);
+                        data_home_group.push(v);
+                    });
+                    DisconSchedule.autocomplete($('#house_num')[0], data_home_num, data_home_group);
+                    $('#street')[0].closest('div.discon-input-wrapper').classList.remove('preloader-spinner');
+                    if ($('#house_num')[0].value == "") {
+                        DisconSchedule.enableWrapper('house_num');
+                    }
+                },
+                function (answer) {
+                    $('#street')[0].closest('div.discon-input-wrapper').classList.remove('preloader-spinner');
+                    $('#street').focus();
+                    DisconSchedule.disableWrapper('house_num');
+                    $('.error-active').removeClass('error-active');
+                    $('#showCurOutage>p')[0].innerHTML = DisconSchedule.messages.get('no-blackout');// + '<br><br>' + DisconSchedule.messages.get('leave-message');
+                    $('#showCurOutage>p')[0].innerHTML += `<br>${DisconSchedule.messages.get('extra-message')}`;
+                    $('#showCurOutage').addClass('active');
+                    DisconSchedule.tableHidden();
+                });
+        }
+    }
+};

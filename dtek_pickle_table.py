@@ -6,8 +6,9 @@ import pickle
 from get_dtek_cookie import showdic
 from pprint import pprint
 import serve
+import json
 
-COOCKA = r'incap_ses_689_2224657=vfTqI6LKnEjARQirttKPCS0W3GMAAAAA6C83W9Ll4txHMj4dBJ61fA=='
+COOCKA = r'incap_ses_689_2224657=LTT/A0nvXC0ZxSSrttKPCa/23GMAAAAAQIECCT/9OmufISMUssKZtA=='
 LOGDIR = 'logs\\'
 OUTFILE = 'test3.txt'
 DTEK_URL = r'https://www.dtek-kem.com.ua'
@@ -40,7 +41,7 @@ def set_cookie(sess: requests.Session(), name: str='', val: str='',*, rawstr: st
     # пока берем из браузера, если реквестсом, то 'request unsuccessful. incapsula incident id'
     # формат из браузера: incap_ses_689_2224657=vfTqI6LKnEjARQirttKPCS0W3GMAAAAA6C83W9Ll4txHMj4dBJ61fA==
     """
-    Устанавливает значение куков взятых из браузера
+    Устанавливает значение куков взятых руками из браузера
     """
     if not rawstr:
         sess.cookies[name] = val
@@ -55,13 +56,17 @@ NEED_DTEK_CONN = True
 # if __name__ == '__main__':
 sess = requests.Session()
 sess = set_cookie(sess, rawstr=COOCKA)  # иногда можно и без этого, хз когда
-resp = sess.get(urllib.parse.urljoin(DTEK_URL, PAGE_ADDR))  # , headers=make_headers('headers.txt'))
+resp: requests.Response = sess.get(urllib.parse.urljoin(DTEK_URL, PAGE_ADDR))  # , headers=make_headers('headers.txt'))
 print(resp.status_code)
 soup = bs(resp.content, 'lxml')
+with open(r'pickle\resp_content.txt', 'w') as f:
+    f.writelines(soup.decode_contents(indent_level=4))
+
 if resp_ok_text not in soup.text:
     print('Cookie is invalid')
     print(soup.get_text())
 else:
+
     print(soup.title)
 
 f = lambda tag: tag.name == 'script' and not tag.attrs
@@ -69,6 +74,8 @@ f = lambda tag: tag.name == 'script' and not tag.attrs
 # d = soup.find_all(lambda tag: tag.name == 'script' and not tag.attrs)[-1].decode_contents()
 d = soup.find_all(f)[-1].decode_contents()
 serve.pickle_put(d, 'pickle\soupfind.bin')
+with open(r'pickle\soupfind.json', 'w') as f:
+    json.dump(d, f)
 print('pickled')
 wrtlog(d)
 

@@ -23,7 +23,7 @@ headers = {
 
 if __name__ == '__main__':
     sess = requests.Session()
-    # resp = sess.get(urllib.parse.urljoin(DTEK_URL, PAGE_ADDR), proxies=proxies, verify=False) # для работы с фидлером
+    # responses = sess.get(urllib.parse.urljoin(DTEK_URL, PAGE_ADDR), proxies=proxies, verify=False) # для работы с фидлером
     resp = sess.get(urllib.parse.urljoin(DTEK_URL, PAGE_ADDR))
     with open(OUTFILE, 'a') as of:
         print('*' * 20)
@@ -32,7 +32,7 @@ if __name__ == '__main__':
         print('=' * 30, file=of)
         showdic(resp.cookies, of)
         # print('-'*30, file=of)
-        # print(resp.json(), file=of)
+        # print(responses.json(), file=of)
         print('', file=of)
         print(resp, file=of)
 

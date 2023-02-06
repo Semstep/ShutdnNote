@@ -6,6 +6,8 @@ import urllib.parse
 from bs4 import BeautifulSoup as bs
 from get_dtek_cookie import showdic
 from dtek_pickle_table import set_cookie
+import json
+from pprint import pprint
 
 resp_err_text = 'Request unsuccessful. Incapsula incident ID: 689000950002755466-6069776676886470'
 resp_ok_text = 'Офіційний сайт ДТЕК'
@@ -24,6 +26,7 @@ print(soup.prettify(), file=outfile)
 print(soup.title)
 if resp_ok_text not in soup.text:
     print('Cookie is invalid')
+    pprint(resp.text)
 else:
     outfile.write(soup.text)
 outfile.close()

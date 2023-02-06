@@ -1,0 +1,40 @@
+parser 2023-02-06 20:34:12,256 DEBUG Session created
+parser 2023-02-06 20:34:12,258 DEBUG DtekSession: cookie is <RequestsCookieJar[<Cookie = for />]>
+parser 2023-02-06 20:34:13,665 INFO DtekSession: request successful
+parser 2023-02-06 21:14:11,175 DEBUG Session created
+parser 2023-02-06 21:14:11,176 DEBUG DtekSession: cookie is <RequestsCookieJar[<Cookie = for />]>
+parser 2023-02-06 21:14:11,971 INFO DtekSession: request successful
+parser 2023-02-06 21:39:22,819 DEBUG Session created
+parser 2023-02-06 21:39:22,820 DEBUG DtekSession: cookie is <RequestsCookieJar[<Cookie = for />]>
+parser 2023-02-06 21:41:44,043 DEBUG Session created
+parser 2023-02-06 21:41:44,043 DEBUG DtekSession: cookie is <RequestsCookieJar[<Cookie = for />]>
+parser 2023-02-06 21:41:44,779 INFO DtekSession: request successful
+parser 2023-02-06 21:41:44,989 INFO soup created
+parser 2023-02-06 21:42:26,701 DEBUG Session created
+parser 2023-02-06 21:42:26,702 DEBUG DtekSession: cookie is <RequestsCookieJar[<Cookie = for />]>
+parser 2023-02-06 21:42:27,155 ERROR DtekSession: request REJECTED
+parser 2023-02-06 21:43:47,092 DEBUG Session created
+parser 2023-02-06 21:43:47,102 DEBUG DtekSession: cookie is <RequestsCookieJar[<Cookie incap_ses_689_2224657=LTT/A0nvXC0ZxSSrttKPCa/23GMAAAAAQIECCT/9OmufISMUssKZtA== for />]>
+parser 2023-02-06 21:43:47,968 ERROR DtekSession: request REJECTED
+parser 2023-02-06 21:45:17,972 DEBUG Session created
+parser 2023-02-06 21:45:17,981 DEBUG DtekSession: cookie is <RequestsCookieJar[<Cookie incap_ses_689_2224657=axNYVndWgTj05ZWrttKPCbAU4GMAAAAAGc9Ae+SBTJvlcNxOe58PSQ== for />]>
+parser 2023-02-06 21:45:18,870 INFO DtekSession: request successful
+parser 2023-02-06 21:45:18,976 INFO soup created
+parser 2023-02-06 21:46:26,985 DEBUG Session created
+parser 2023-02-06 21:46:26,994 DEBUG DtekSession: cookie is <RequestsCookieJar[<Cookie incap_ses_689_2224657=axNYVndWgTj05ZWrttKPCbAU4GMAAAAAGc9Ae+SBTJvlcNxOe58PSQ== for />]>
+parser 2023-02-06 21:46:28,395 ERROR DtekSession: request REJECTED
+parser 2023-02-06 21:49:13,161 DEBUG Session created
+parser 2023-02-06 21:49:13,162 DEBUG DtekSession: cookie is <RequestsCookieJar[<Cookie incap_ses_689_2224657=axNYVndWgTj05ZWrttKPCbAU4GMAAAAAGc9Ae+SBTJvlcNxOe58PSQ== for />]>
+parser 2023-02-06 21:49:14,480 ERROR DtekSession: request REJECTED
+parser 2023-02-06 21:50:42,816 DEBUG Session created
+parser 2023-02-06 21:50:42,824 DEBUG DtekSession: cookie is <RequestsCookieJar[<Cookie = for />]>
+parser 2023-02-06 21:50:43,549 ERROR DtekSession: request REJECTED
+parser 2023-02-06 21:53:44,086 DEBUG Session created
+parser 2023-02-06 21:53:44,095 DEBUG DtekSession: cookie is <RequestsCookieJar[<Cookie incap_ses_473_2224657=SRjrBviyXzxfRzkeyW+QBn5a4WMAAAAA2Vdz87vKQXS+IIp7ceuv7w== for />]>
+parser 2023-02-06 21:53:45,674 INFO DtekSession: request successful
+parser 2023-02-06 21:53:46,129 INFO soup created
+parser 2023-02-06 21:55:04,363 DEBUG Session created
+parser 2023-02-06 21:55:04,364 DEBUG DtekSession: cookie is <RequestsCookieJar[<Cookie incap_ses_473_2224657=SRjrBviyXzxfRzkeyW+QBn5a4WMAAAAA2Vdz87vKQXS+IIp7ceuv7w== for />]>
+parser 2023-02-06 21:55:05,988 INFO DtekSession: request successful
+parser 2023-02-06 21:55:06,395 INFO soup created
+parser 2023-02-06 21:55:06,490 INFO filtered data stored in store\script_filtered.json

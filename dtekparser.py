@@ -11,9 +11,10 @@ loghandler = logging.FileHandler(r'logs\\' + logger.name + '.log')
 loghandler.setFormatter(logging.Formatter("%(name)s %(asctime)s %(levelname)s %(message)s"))
 logger.addHandler(loghandler)
 
-# COOCKA = r'incap_ses_689_2224657=LTT/A0nvXC0ZxSSrttKPCa/23GMAAAAAQIECCT/9OmufISMUssKZtA=='
-COOCKA = '='
+COOCKA = r'incap_ses_473_2224657=SRjrBviyXzxfRzkeyW+QBn5a4WMAAAAA2Vdz87vKQXS+IIp7ceuv7w=='
+# COOCKA = '='
 RESP_TEXT_UNSUCCESS = 'Request unsuccessful. Incapsula incident'  # ID: 727000860105380165-252961049657415053'
+
 
 class DtekSession:
     DTEK_URL = r'https://www.dtek-kem.com.ua'
@@ -47,21 +48,37 @@ class DtekSession:
         if RESP_TEXT_UNSUCCESS in self.responses[-1].text:
             self.is_ok = False
             logger.error(f'{self.LOG_REC_NAME}: request REJECTED')
-        else:
-            logger.info(f'{self.LOG_REC_NAME}: request successful, {self.responses[-1].}')
+            return None
+
+        logger.info(f'{self.LOG_REC_NAME}: request successful')
+        return self.responses[-1]
 
 
 class DtekParser:
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    soup = None
+
+    def __init__(self, response: requests.Response):
+        super().__init__()
+        try:
+            self.soup = bs(response.content, 'lxml')
+            logger.info('soup created')
+        except():
+            logger.error(f'parser: SOUP CREATION ERROR')
 
     def get_shutd_group(self):
         ...
 
     def get_rawdata_a(self):
-        ...
-
+        d = self.soup.find_all(lambda tag: tag.name == 'script' and not tag.attrs)[-1].decode_contents()
+        with open(r'store\script_filtered.json', 'w') as fs:
+            # fs.write(d)
+            json.dump(d, fs)
+            logger.info(f'filtered data stored in {fs.name}')
 
 if __name__ == '__main__':
     ds = DtekSession()
-    ds.get_site_response()
+    rsp = ds.get_site_response()
+    if not rsp:
+        raise Exception(IOError)
+    dp = DtekParser(rsp)
+    dp.get_rawdata_a()
